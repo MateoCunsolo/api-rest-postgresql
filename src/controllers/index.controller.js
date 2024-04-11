@@ -3,12 +3,15 @@
 
 const { Pool } = require('pg');
 const pool = new Pool({
-    user: 'postgres',
-    password: 'poolday10',
-    host: 'localhost',
-    port:'5432',
-    database:'flick_finder',
-});
+    user: 'postgresql_mateo',
+    password: 'd7egmYblZWRwEV4iU5piZiO0OKOxCXyU',
+    host: 'dpg-coc1bbocmk4c73ahn5rg-a.oregon-postgres.render.com',
+    port: 5432,
+    database: 'flick_finder_db',
+    ssl: {
+      rejectUnauthorized: false // Configuración para permitir la conexión SSL
+    }
+  });
 
 
 const getUsers = async (req, res) => {

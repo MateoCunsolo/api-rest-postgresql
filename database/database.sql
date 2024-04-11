@@ -1,6 +1,7 @@
--- Crear la base de datos si no existe
-CREATE DATABASE flick_finder;
-\c flick_finder;
+
+--Comando para conectarme a la base de datos de postgres en render
+-- psql "postgres://postgresql_mateo:d7egmYblZWRwEV4iU5piZiO0OKOxCXyU@dpg-coc1bbocmk4c73ahn5rg-a.oregon-postgres.render.com/flick_finder_db"
+
 
 -- Crear la tabla de usuario
 CREATE TABLE "user" (

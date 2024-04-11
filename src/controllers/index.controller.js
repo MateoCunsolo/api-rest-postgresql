@@ -12,8 +12,9 @@ const pool = new Pool({
 
 
 const getUsers = async (req, res) => {
-    const response = await pool.query('SELECT * FROM "user"')
-    res.status(200).json(response.rows);
+    // const response = await pool.query('SELECT * FROM "user"')
+    // res.status(200).json(response.rows);
+    res.json('users');
 }
 
 const getUserById = async (req, res) => {

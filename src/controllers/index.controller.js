@@ -32,7 +32,6 @@ const getUsers = async (req, res) => {
     }
 }
 
-
 const getUserById = async (req, res) => {
     try {
         const id = req.params.id;
@@ -81,7 +80,6 @@ const createUser = async (req, res) => {
     }
 }
 
-
 const deleteUser = async (req, res) => {
     try {
         const { id } = req.params;
@@ -100,7 +98,6 @@ const deleteUser = async (req, res) => {
         return res.status(500).json({ error: 'Internal server error' });
     }
 }
-
 
 const updateUser = async (req, res) => {
     try {
@@ -122,7 +119,6 @@ const updateUser = async (req, res) => {
         res.status(500).json({ message: 'Internal Server Error' });
     }
 }
-
 
 const createNewList = async (req, res) => {
     try {

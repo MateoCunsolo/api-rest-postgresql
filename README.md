@@ -1,0 +1,1 @@
+Api Rest realizada con postgresql, que se conecta con la base de datos flick_finder_db, esta base de datos esta alojada en Render y es la base de datos de este proyecto: https://github.com/MateoCunsolo/Proyecto-Final-TUP-UTN

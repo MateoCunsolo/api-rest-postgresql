@@ -16,7 +16,7 @@ const pool = new Pool({
 
 const getUsers = async (req, res) => {
     try {
-        const response = await pool.query('SELECT id, userName, email FROM "user"')
+        const response = await pool.query('SELECT id, userName, email, password FROM "user"')
         if (response.rows.length === 0) {
             res.status(404).json({
                 message: 'DB is empty'

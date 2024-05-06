@@ -35,7 +35,7 @@ const getUsers = async (req, res) => {
 const getUserById = async (req, res) => {
     try {
         const id = req.params.id;
-        const response = await pool.query('SELECT id FROM "user" WHERE id = $1', [id]);
+        const response = await pool.query('SELECT username, email FROM "user" WHERE id = $1', [id]);
         if (response.rows.length === 0) {
             res.status(404).json({
                 message: 'User not found'
@@ -99,31 +99,12 @@ const deleteUser = async (req, res) => {
     }
 }
 
-const updateUser = async (req, res) => {
-    try {
-        const id = req.params.id;
-        const { username, email, password } = req.body;
-        const response = await pool.query('UPDATE "user" SET username = $1, email = $2, password = $3 WHERE id = $4', [
-            username,
-            email,
-            password,
-            id
-        ]);
-        if (response.rowCount === 0) {
-            res.status(404).json({ message: `User ${id} not found` });
-        } else {
-            res.json({ message: `User ${id} updated successfully` });
-        }
-    } catch (e) {
-        console.log(e);
-        res.status(500).json({ message: 'Internal Server Error' });
-    }
-}
 
 const createNewList = async (req, res) => {
     try {
         const { id } = req.params;
         const { list } = req.params;
+        console.log(id, list);
         const response = await pool.query('INSERT INTO "list" (id_user, name) VALUES ($1, $2)', [id, list]);
         res.status(201).json({ message: 'New list created' });
     } catch (e) {
@@ -135,9 +116,14 @@ const createNewList = async (req, res) => {
 const deleteList = async (req, res) => {
     try {
         const { id } = req.params;
-        const { list } = req.params;
+        const { list } = req.body;
+        const  response1 = await pool.query('DELETE FROM movie_x_list WHERE list_id IN (SELECT id FROM "list" WHERE name = $1 AND id_user = $2)', [list, id])
         const response = await pool.query('DELETE FROM "list" WHERE name = $1 AND id_user = $2', [list, id]);
-        res.json({ message: 'List deleted successfully' });
+
+        if (response.rowCount === 0) {
+            res.status(404).json({ message: 'List not found for the specified user' });
+        }else
+            res.json({ message: 'List deleted successfully' });
     } catch (e) {
         console.log(e);
         res.status(500).json({ message: 'Internal Server Error' });
@@ -146,10 +132,10 @@ const deleteList = async (req, res) => {
 
 const updateNameList = async (req, res) => {
     try {
-        const { id } = req.params;
-        let { list } = req.params;
-        const { newName } = req.params;
-
+        const { id } = req.body;
+        let { list } = req.body;
+        const { newName } = req.body;
+        console.log(id, list, newName);
         list = list.replace(/[^a-zA-Z0-9]/g, ''); // Limpiar de espacios y caracteres especiales
 
         const response = await pool.query('UPDATE "list" SET name = $1 WHERE id_user = $2 AND name = $3', [newName, id, list]);
@@ -178,25 +164,28 @@ const getListForId = async (req, res) => {
 const getMoviesForList = async (req, res) => {
     try {
         const { id, list } = req.params;
-        const response = await pool.query('SELECT id_movie FROM movie_x_list WHERE list_id IN (SELECT id FROM "list" WHERE id_user = $1 AND name = $2)', [id, list]);
+        const idList = await pool.query('SELECT id FROM "list" WHERE id_user = $1 AND name = $2', [id, list]);
+        const response = await pool.query('SELECT id_movie FROM movie_x_list WHERE list_id = $1', [idList.rows[0].id]);
+        if(response.rows.length === 0) {
+            res.json({ message: 'No movies found for the specified list',list: list, user_id:id});
+            return;
+        }
         res.json(response.rows);
     } catch (e) {
-        console.log(e);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 }
 
 const addMovieToList = async (req, res) => {
     try {
-        const { id } = req.params;
-        const { list } = req.params;
-        const { idMovie } = req.params;
-
+        const id = req.params.id;
+        const list = req.params.list;
+        const idMovie = req.params.idMovie;
         const response1 = await pool.query('SELECT id FROM "list" WHERE id_user = $1 AND name = $2', [id, list]);
         if (response1.rows.length === 0) {
             res.status(404).json({ message: 'List not found for the specified user' });
             return;
-        }
+        }   
 
         const listId = response1.rows[0].id;
 
@@ -219,7 +208,6 @@ const deleteMovieFromList = async (req, res) => {
         const { id } = req.params;
         const { list } = req.params;
         const { idMovie } = req.params;
-
         const response1 = await pool.query('SELECT id FROM "list" WHERE id_user = $1 AND name = $2', [id, list]);
         if (response1.rows.length === 0) {
             res.status(404).json({ message: 'List not found for the specified user' });
@@ -242,29 +230,25 @@ const deleteMovieFromList = async (req, res) => {
     }
 }
 
-const createComment = async (req, res) => {
+const AddComment = async (req, res) => {
     try {
-        const { idMovie, idUser } = req.params;
+        const { id } = req.params;
         const { text } = req.body;
-
-        const response1 = await pool.query('SELECT id FROM "user" WHERE id = $1', [idUser]);
-        if (response1.rows.length === 0) {
+        const { idMovie } = req.body;
+        const response2 = await pool.query('INSERT INTO comment_x_user (text, user_id, id_movie) VALUES ($1, $2, $3)', [text, id, idMovie]);
+        if (response2.rowCount === 0) {
             res.status(404).json({ message: 'User not found' });
-            return;
-        }
-
-        const response2 = await pool.query('INSERT INTO comment_x_user (text, user_id, id_movie) VALUES ($1, $2, $3)', [text, idUser, idMovie]);
-        res.status(201).json({ message: 'Comment added successfully' });
+        }else
+            res.status(201).json({ message: 'Comment added successfully' });
     } catch (e) {
-        console.log(e);
         res.status(500).json({ message: 'Internal Server Error' });
     }
 }
 
-const updateNameUser = async (req, res) => {
+const UpdateUserName = async (req, res) => {
     try {
         const { id } = req.params;
-        const { newUsername } = req.body; // Utilizamos req.body en lugar de req.params
+        const { newUsername } = req.body;
         const response = await pool.query('UPDATE "user" SET username = $1 WHERE id = $2', [newUsername, id]);
         if (response.rowCount === 0) {
             res.status(404).json({ message: `User ${id} not found` });
@@ -277,10 +261,10 @@ const updateNameUser = async (req, res) => {
     }
 }
 
-const updateEmailUser = async (req, res) => {
+const UpdateUserEmail = async (req, res) => {
     try {
         const { id } = req.params;
-        const { newEmail } = req.body; // Utilizamos req.body en lugar de req.params
+        const { newEmail } = req.body;
         const response = await pool.query('UPDATE "user" SET email = $1 WHERE id = $2', [newEmail, id]);
         if (response.rowCount === 0) {
             res.status(404).json({ message: `User ${id} not found` }); // Corregimos la interpolación
@@ -293,7 +277,7 @@ const updateEmailUser = async (req, res) => {
     }
 }
 
-const updatePasswordUser = async (req, res) => {
+const UpdatedUserPassword = async (req, res) => {
     try {
         const { id } = req.params;
         const { newPassword } = req.body;
@@ -345,7 +329,6 @@ module.exports = {
     getUserById,
     createUser,
     deleteUser,
-    updateUser,
     createNewList,
     deleteList,
     updateNameList,
@@ -353,10 +336,10 @@ module.exports = {
     getMoviesForList,
     addMovieToList,
     deleteMovieFromList,
-    createComment,
-    updateNameUser,
-    updateEmailUser,
-    updatePasswordUser,
+    AddComment,
+    UpdateUserName,
+    UpdateUserEmail,
+    UpdatedUserPassword,
     getPassword,
     commentForIdMovie
 }

@@ -1,0 +1,5 @@
+-USER BAR
+-LISTAS BAR
+    [
+        -PELICUAS SEGUN [LISTA]
+    ]
